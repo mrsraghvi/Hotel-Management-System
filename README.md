@@ -1,5 +1,4 @@
 # 🏨 Hotel Management System
-### Final Year Engineering Project — Complete Full-Stack Application
 
 ---
 
