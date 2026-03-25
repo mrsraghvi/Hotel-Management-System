@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Royal Hotel — Luxury Redefined</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* ---- HERO ---- */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .hero-glow {
+            position: absolute;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+        }
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(201,168,76,0.1);
+            border: 1px solid rgba(201,168,76,0.3);
+            color: var(--primary);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 {
+            color: var(--white);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 .gold { color: var(--primary); }
+        .hero p {
+            color: rgba(255,255,255,0.7);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+        .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+        /* ---- SEARCH BOX ---- */
+        .search-bar {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            margin-top: -60px;
+            position: relative;
+            z-index: 10;
+        }
+        .search-bar h3 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--secondary);
+        }
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        @media(max-width:900px){ .search-grid{ grid-template-columns:1fr 1fr; } }
+        @media(max-width:600px){ .search-grid{ grid-template-columns:1fr; } }
+
+        /* ---- FEATURES ---- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            padding: 4rem 0;
+        }
+        .feature-card {
+            text-align: center;
+            padding: 2rem 1.5rem;
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .feature-card h4 { margin-bottom: 0.5rem; color: var(--secondary); }
+        .feature-card p { color: var(--mid-gray); font-size: 0.9rem; }
+
+        /* ---- ROOMS SECTION ---- */
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .section-header .subtitle {
+            color: var(--primary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+        .section-header h2 { color: var(--secondary); }
+        .section-header p { color: var(--mid-gray); max-width: 500px; margin: 0.8rem auto 0; }
+
+        /* ---- TESTIMONIALS ---- */
+        .testimonials-section { background: var(--secondary); padding: 5rem 0; }
+        .testimonials-section .section-header h2 { color: var(--white); }
+        .testimonials-section .section-header p { color: rgba(255,255,255,0.5); }
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .testimonial-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(201,168,76,0.2);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+        }
+        .stars { color: var(--primary); font-size: 0.9rem; margin-bottom: 0.8rem; }
+        .testimonial-text { color: rgba(255,255,255,0.8); font-size: 0.9rem; line-height: 1.7; margin-bottom: 1rem; }
+        .testimonial-author { display: flex; align-items: center; gap: 0.8rem; }
+        .author-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--primary); color: var(--secondary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.9rem;
+        }
+        .author-name { color: var(--white); font-weight: 500; font-size: 0.9rem; }
+        .author-title { color: rgba(255,255,255,0.4); font-size: 0.78rem; }
+
+        /* ---- FOOTER ---- */
+        .footer {
+            background: var(--bg-dark);
+            color: rgba(255,255,255,0.6);
+            padding: 3rem 0 1.5rem;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+        @media(max-width:768px){ .footer-grid{ grid-template-columns:1fr; } }
+        .footer-brand { font-family: var(--font-display); font-size: 1.5rem; color: var(--primary); margin-bottom: 0.8rem; }
+        .footer h5 { color: var(--white); margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .footer a { color: rgba(255,255,255,0.5); font-size: 0.88rem; display: block; margin-bottom: 0.5rem; transition: var(--transition); }
+        .footer a:hover { color: var(--primary); }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding-top: 1.5rem;
+            text-align: center;
+            font-size: 0.82rem;
+        }
+    </style>
+</head>
+<body>
+<!-- ============================================================
+     NAVIGATION
+============================================================ -->
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo">Grand<span>Royal</span></a>
+    <div class="nav-links">
+        <a href="/index.html" class="active">Home</a>
+        <a href="/pages/rooms.html">Rooms</a>
+        <a href="#amenities">Amenities</a>
+        <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-auth" id="nav-auth">
+        <!-- Rendered by api.js -->
+    </div>
+</nav>
+
+<!-- ============================================================
+     HERO SECTION
+============================================================ -->
+<div class="page-wrapper">
+<section class="hero">
+    <div class="hero-glow"></div>
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-tag">⭐ 5-Star Luxury Hotel</div>
+            <h1>Where Luxury Meets <span class="gold">Comfort</span></h1>
+            <p>Experience unparalleled hospitality at Grand Royal Hotel. Premium rooms, world-class amenities, and memories that last a lifetime.</p>
+            <div class="hero-cta">
+                <a href="/pages/rooms.html" class="btn btn-primary btn-lg">🛏 Browse Rooms</a>
+                <a href="/pages/register.html" class="btn btn-outline btn-lg" style="color:#fff;border-color:rgba(255,255,255,0.4)">Register Free</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SEARCH BAR
+============================================================ -->
+<div class="container" style="margin-top:-30px; position:relative; z-index:10;">
+    <div class="search-bar">
+        <h3>🔍 Find Your Perfect Room</h3>
+        <div class="search-grid">
+            <div class="form-group" style="margin:0">
+                <label class="form-label">Check-In Date</label>
+                <input type="date" id="s-checkin" class="form-control">
+            </div>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">Check-Out Date</label>
+                <input type="date" id="s-checkout" class="form-control">
+            </div>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">Room Type</label>
+                <select id="s-type" class="form-control">
+                    <option value="">All Types</option>
+                    <option value="Single">Single</option>
+                    <option value="Double">Double</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Suite">Suite</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0">
+                <label class="form-label">Guests</label>
+                <select id="s-guests" class="form-control">
+                    <option value="1">1 Guest</option>
+                    <option value="2">2 Guests</option>
+                    <option value="3">3 Guests</option>
+                    <option value="4">4 Guests</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="searchRooms()" style="white-space:nowrap; height:44px;">Search</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     FEATURES
+============================================================ -->
+<section class="section" id="amenities">
+    <div class="container">
+        <div class="section-header">
+            <div class="subtitle">Why Choose Us</div>
+            <h2>Exceptional Experiences</h2>
+            <p>Every detail crafted for your comfort and satisfaction</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🌊</span>
+                <h4>Infinity Pool</h4>
+                <p>Relax in our stunning rooftop infinity pool with panoramic city views</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🍽️</span>
+                <h4>Fine Dining</h4>
+                <p>Award-winning restaurant serving international and local cuisine</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💆</span>
+                <h4>Luxury Spa</h4>
+                <p>World-class spa treatments to rejuvenate your mind and body</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🚗</span>
+                <h4>Valet Parking</h4>
+                <p>Complimentary valet parking service for all guests</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🏋️</span>
+                <h4>Fitness Center</h4>
+                <p>State-of-the-art gym with personal trainers available 24/7</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📶</span>
+                <h4>Free High-Speed WiFi</h4>
+                <p>Blazing-fast WiFi throughout the property for all your needs</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     FEATURED ROOMS
+============================================================ -->
+<section class="section" style="background:var(--light-gray); padding: 4rem 0;">
+    <div class="container">
+        <div class="section-header">
+            <div class="subtitle">Accommodations</div>
+            <h2>Our Room Collection</h2>
+            <p>Choose from our carefully curated selection of rooms and suites</p>
+        </div>
+        <div class="rooms-grid" id="featured-rooms">
+            <!-- Rendered by JS -->
+            <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--mid-gray)">
+                <div class="spinner"></div>
+                <p style="margin-top:1rem">Loading rooms...</p>
+            </div>
+        </div>
+        <div style="text-align:center;margin-top:2.5rem">
+            <a href="/pages/rooms.html" class="btn btn-secondary btn-lg">View All Rooms →</a>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     TESTIMONIALS
+============================================================ -->
+<section class="testimonials-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="subtitle" style="color:var(--primary)">Guest Reviews</div>
+            <h2>What Our Guests Say</h2>
+            <p>Thousands of happy guests have made Grand Royal their home away from home</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p class="testimonial-text">"An absolutely breathtaking experience. The Deluxe room had a stunning view and the staff were incredibly attentive. Will definitely come back!"</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">P</div>
+                    <div>
+                        <div class="author-name">Priya Sharma</div>
+                        <div class="author-title">Business Traveler, Mumbai</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p class="testimonial-text">"The Presidential Suite exceeded all our expectations. From the jacuzzi to the 24-hour butler service — pure luxury! Perfect honeymoon destination."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">R</div>
+                    <div>
+                        <div class="author-name">Rahul & Meena</div>
+                        <div class="author-title">Honeymooners, Bengaluru</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★☆</div>
+                <p class="testimonial-text">"Great location, clean rooms and the online booking system was so easy to use. The check-in was seamless and the staff was very welcoming."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">A</div>
+                    <div>
+                        <div class="author-name">Amit Verma</div>
+                        <div class="author-title">Family Vacation, Delhi</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer class="footer" id="contact">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand">Grand Royal</div>
+                <p style="font-size:0.88rem;line-height:1.8;max-width:300px">Your luxury home away from home. We offer world-class hospitality with modern amenities.</p>
+                <p style="margin-top:1rem;font-size:0.85rem">📍 123 MG Road, Hyderabad, Telangana 500001</p>
+                <p style="font-size:0.85rem">📞 +91-40-1234-5678 | 📧 info@grandroyal.com</p>
+            </div>
+            <div>
+                <h5>Quick Links</h5>
+                <a href="/pages/rooms.html">Our Rooms</a>
+                <a href="/pages/register.html">Register</a>
+                <a href="/pages/login.html">Login</a>
+                <a href="#amenities">Amenities</a>
+            </div>
+            <div>
+                <h5>Room Types</h5>
+                <a href="/pages/rooms.html?type=Single">Single Rooms</a>
+                <a href="/pages/rooms.html?type=Double">Double Rooms</a>
+                <a href="/pages/rooms.html?type=Deluxe">Deluxe Rooms</a>
+                <a href="/pages/rooms.html?type=Suite">Suites</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 Grand Royal Hotel Management System. Built for Final Year Engineering Project.</p>
+        </div>
+    </div>
+</footer>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/api.js"></script>
+<script>
+    // Set minimum dates
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('s-checkin').min = today;
+    document.getElementById('s-checkout').min = today;
+
+    // Pre-fill dates
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    const dayAfter  = new Date(); dayAfter.setDate(dayAfter.getDate()+2);
+    document.getElementById('s-checkin').value  = tomorrow.toISOString().split('T')[0];
+    document.getElementById('s-checkout').value = dayAfter.toISOString().split('T')[0];
+
+    // Room emojis by type
+    const roomEmojis = { Single:'🛏', Double:'🛏🛏', Deluxe:'✨', Suite:'👑' };
+    const typeBgColors = {
+        Single:'linear-gradient(135deg,#1a1a2e,#16213e)',
+        Double:'linear-gradient(135deg,#16213e,#0f3460)',
+        Deluxe:'linear-gradient(135deg,#0f3460,#533483)',
+        Suite:'linear-gradient(135deg,#533483,#c9a84c)'
+    };
+
+    function searchRooms() {
+        const ci  = document.getElementById('s-checkin').value;
+        const co  = document.getElementById('s-checkout').value;
+        const tp  = document.getElementById('s-type').value;
+        const gst = document.getElementById('s-guests').value;
+        if (!ci || !co) { showToast('Please select check-in and check-out dates.', 'warning'); return; }
+        if (new Date(co) <= new Date(ci)) { showToast('Check-out must be after check-in.', 'error'); return; }
+        let url = `/pages/rooms.html?checkIn=${ci}&checkOut=${co}&guests=${gst}`;
+        if (tp) url += `&type=${tp}`;
+        window.location.href = url;
+    }
+
+    // Load featured rooms on homepage
+    async function loadFeaturedRooms() {
+        const { ok, data } = await RoomAPI.getAll('status=available');
+        const container = document.getElementById('featured-rooms');
+        if (!ok || !data.rooms || data.rooms.length === 0) {
+            container.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--mid-gray)">No rooms available at the moment.</p>';
+            return;
+        }
+        // Show only first 3 rooms
+        const featured = data.rooms.slice(0, 3);
+        container.innerHTML = featured.map(room => `
+            <div class="room-card">
+                <div class="room-card-img" style="background:${typeBgColors[room.type_name]||typeBgColors.Single}">
+                    <span style="font-size:4rem;position:relative;z-index:1">${roomEmojis[room.type_name]||'🛏'}</span>
+                    <span class="badge badge-success" style="position:absolute;top:12px;right:12px;z-index:2">${room.status}</span>
+                </div>
+                <div class="room-card-body">
+                    <div class="room-card-type">${room.type_name} Room • Floor ${room.floor}</div>
+                    <h4 class="room-card-title">Room ${room.room_number}</h4>
+                    <p style="color:var(--mid-gray);font-size:0.85rem;margin-bottom:0.8rem">${room.description||''}</p>
+                    <div class="room-amenities">
+                        ${(room.amenities||[]).slice(0,4).map(a=>`<span class="amenity-tag">${a}</span>`).join('')}
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
+                        <div class="room-card-price">${formatCurrency(room.price_per_night)}<span>/night</span></div>
+                        <a href="/pages/rooms.html" class="btn btn-outline btn-sm">View Details</a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    loadFeaturedRooms();
+</script>
+</body>
+</html>

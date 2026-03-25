@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — Grand Royal Hotel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .recent-table td, .recent-table th { font-size: 0.85rem; }
+        .chart-bar-wrap { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.7rem; }
+        .chart-label { width: 80px; font-size: 0.82rem; color: var(--mid-gray); text-align: right; flex-shrink: 0; }
+        .chart-bar-bg { flex: 1; height: 20px; background: var(--light-gray); border-radius: 10px; overflow: hidden; }
+        .chart-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-dark)); border-radius: 10px; transition: width 0.8s ease; }
+        .chart-value { width: 70px; font-size: 0.82rem; font-weight: 600; color: var(--secondary); }
+        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+        @media(max-width:900px){ .dash-grid{ grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo">Grand<span>Royal</span></a>
+    <div class="nav-links">
+        <a href="/pages/admin/dashboard.html" class="active">Dashboard</a>
+        <a href="/pages/admin/rooms.html">Rooms</a>
+        <a href="/pages/admin/bookings.html">Bookings</a>
+        <a href="/pages/admin/reports.html">Reports</a>
+    </div>
+    <div class="nav-auth" id="nav-auth"></div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Main</div>
+                <a class="sidebar-link active" href="/pages/admin/dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="/pages/admin/rooms.html"><span class="sidebar-icon">🛏</span> Manage Rooms</a>
+                <a class="sidebar-link" href="/pages/admin/bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="/pages/admin/users.html"><span class="sidebar-icon">👥</span> Customers</a>
+                <a class="sidebar-link" href="/pages/admin/reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section" style="margin-top:auto;padding-top:2rem">
+                <a class="sidebar-link" href="/pages/rooms.html"><span class="sidebar-icon">🌐</span> View Website</a>
+                <a class="sidebar-link" onclick="logout()" style="cursor:pointer"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-content">
+            <div style="margin-bottom:2rem">
+                <h2 style="color:var(--secondary)">Dashboard Overview</h2>
+                <p style="color:var(--mid-gray);font-size:0.9rem">Welcome back, <span id="admin-name">Admin</span>! Here's what's happening today.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card"><div class="stat-icon" style="background:rgba(52,152,219,0.1)">🛏</div><div><div class="stat-value" id="s-rooms">—</div><div class="stat-label">Total Rooms</div></div></div>
+                <div class="stat-card" style="border-left-color:var(--success)"><div class="stat-icon" style="background:rgba(46,204,113,0.1)">✅</div><div><div class="stat-value" id="s-available">—</div><div class="stat-label">Available</div></div></div>
+                <div class="stat-card" style="border-left-color:var(--danger)"><div class="stat-icon" style="background:rgba(231,76,60,0.1)">🔴</div><div><div class="stat-value" id="s-occupied">—</div><div class="stat-label">Occupied</div></div></div>
+                <div class="stat-card" style="border-left-color:#9b59b6"><div class="stat-icon" style="background:rgba(155,89,182,0.1)">📋</div><div><div class="stat-value" id="s-bookings">—</div><div class="stat-label">Total Bookings</div></div></div>
+                <div class="stat-card" style="border-left-color:var(--warning)"><div class="stat-icon" style="background:rgba(243,156,18,0.1)">⏳</div><div><div class="stat-value" id="s-pending">—</div><div class="stat-label">Pending</div></div></div>
+                <div class="stat-card" style="border-left-color:var(--primary)"><div class="stat-icon" style="background:rgba(201,168,76,0.1)">💰</div><div><div class="stat-value" id="s-revenue">—</div><div class="stat-label">Total Revenue</div></div></div>
+                <div class="stat-card" style="border-left-color:var(--info)"><div class="stat-icon" style="background:rgba(52,152,219,0.1)">📅</div><div><div class="stat-value" id="s-this-month">—</div><div class="stat-label">This Month</div></div></div>
+                <div class="stat-card" style="border-left-color:#2ecc71"><div class="stat-icon" style="background:rgba(46,204,113,0.1)">👥</div><div><div class="stat-value" id="s-customers">—</div><div class="stat-label">Customers</div></div></div>
+            </div>
+
+            <!-- Today's stats + Recent Bookings -->
+            <div class="dash-grid">
+                <!-- Today's activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>📅 Today's Activity</h4>
+                    </div>
+                    <div class="card-body">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                            <div style="text-align:center;padding:1rem;background:rgba(46,204,113,0.08);border-radius:var(--radius-sm);border:1px solid rgba(46,204,113,0.2)">
+                                <div style="font-size:2rem;font-weight:700;color:var(--success)" id="s-checkins">—</div>
+                                <div style="font-size:0.82rem;color:var(--mid-gray)">Check-Ins</div>
+                            </div>
+                            <div style="text-align:center;padding:1rem;background:rgba(231,76,60,0.08);border-radius:var(--radius-sm);border:1px solid rgba(231,76,60,0.2)">
+                                <div style="font-size:2rem;font-weight:700;color:var(--danger)" id="s-checkouts">—</div>
+                                <div style="font-size:0.82rem;color:var(--mid-gray)">Check-Outs</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:1.5rem">
+                            <div style="font-size:0.85rem;font-weight:500;margin-bottom:1rem">Room Occupancy</div>
+                            <div id="occupancy-bars">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Bookings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🕐 Recent Bookings</h4>
+                        <a href="/pages/admin/bookings.html" style="font-size:0.82rem;color:var(--primary)">View All →</a>
+                    </div>
+                    <div class="card-body" style="padding:0">
+                        <table class="table recent-table">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Guest</th>
+                                    <th>Room</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-bookings"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card" style="margin-top:1.5rem">
+                <div class="card-header"><h4>⚡ Quick Actions</h4></div>
+                <div class="card-body">
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+                        <a href="/pages/admin/rooms.html" class="btn btn-primary">➕ Add Room</a>
+                        <a href="/pages/admin/bookings.html" class="btn btn-secondary">📋 All Bookings</a>
+                        <a href="/pages/admin/users.html" class="btn btn-outline">👥 Manage Users</a>
+                        <a href="/pages/admin/reports.html" class="btn btn-outline">📊 Revenue Report</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/api.js"></script>
+<script>
+    if (!requireAdmin()) { /* redirects */ }
+
+    // Show admin name
+    const user = getUser();
+    if (user) document.getElementById('admin-name').textContent = user.name;
+
+    async function loadDashboard() {
+        showLoading('Loading dashboard...');
+        const { ok, data } = await AdminAPI.dashboard();
+        hideLoading();
+        if (!ok) { showToast('Failed to load dashboard.', 'error'); return; }
+
+        const s = data.stats;
+
+        // Room stats
+        document.getElementById('s-rooms').textContent = s.rooms.total_rooms;
+        document.getElementById('s-available').textContent = s.rooms.available;
+        document.getElementById('s-occupied').textContent = s.rooms.occupied;
+
+        // Booking stats
+        document.getElementById('s-bookings').textContent = s.bookings.total_bookings;
+        document.getElementById('s-pending').textContent = s.bookings.pending;
+
+        // Revenue
+        document.getElementById('s-revenue').textContent = formatCurrency(s.revenue.total_revenue);
+        document.getElementById('s-this-month').textContent = formatCurrency(s.revenue.this_month_revenue);
+
+        // Customers
+        document.getElementById('s-customers').textContent = s.customers.total_customers;
+
+        // Today
+        document.getElementById('s-checkins').textContent = s.today.todays_checkins || 0;
+        document.getElementById('s-checkouts').textContent = s.today.todays_checkouts || 0;
+
+        // Occupancy bars
+        const total = parseInt(s.rooms.total_rooms) || 1;
+        const occData = [
+            { label: 'Available', count: s.rooms.available, color: '#2ecc71' },
+            { label: 'Occupied',  count: s.rooms.occupied,  color: '#e74c3c' },
+            { label: 'Reserved',  count: s.rooms.reserved,  color: '#f39c12' },
+            { label: 'Maint.',    count: s.rooms.maintenance, color: '#95a5a6' },
+        ];
+        document.getElementById('occupancy-bars').innerHTML = occData.map(o => `
+            <div class="chart-bar-wrap">
+                <div class="chart-label">${o.label}</div>
+                <div class="chart-bar-bg">
+                    <div class="chart-bar-fill" style="width:${((o.count||0)/total*100).toFixed(0)}%;background:${o.color}"></div>
+                </div>
+                <div class="chart-value">${o.count||0} / ${total}</div>
+            </div>`).join('');
+
+        // Recent bookings table
+        const tbody = document.getElementById('recent-bookings');
+        tbody.innerHTML = (s.recentBookings || []).map(b => `
+            <tr>
+                <td style="font-weight:500;color:var(--primary)">${b.booking_reference}</td>
+                <td>${b.guest_name}</td>
+                <td>${b.room_number} (${b.room_type})</td>
+                <td>${getStatusBadge(b.status)}</td>
+                <td style="font-weight:600">${formatCurrency(b.total_amount)}</td>
+            </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--mid-gray)">No recent bookings</td></tr>';
+    }
+
+    loadDashboard();
+</script>
+</body>
+</html>

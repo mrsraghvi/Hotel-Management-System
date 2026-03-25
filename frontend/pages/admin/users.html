@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Customers — Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo">Grand<span>Royal</span></a>
+    <div class="nav-links">
+        <a href="/pages/admin/dashboard.html">Dashboard</a>
+        <a href="/pages/admin/rooms.html">Rooms</a>
+        <a href="/pages/admin/bookings.html">Bookings</a>
+        <a href="/pages/admin/reports.html">Reports</a>
+    </div>
+    <div class="nav-auth" id="nav-auth"></div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Main</div>
+                <a class="sidebar-link" href="/pages/admin/dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="/pages/admin/rooms.html"><span class="sidebar-icon">🛏</span> Manage Rooms</a>
+                <a class="sidebar-link" href="/pages/admin/bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link active" href="/pages/admin/users.html"><span class="sidebar-icon">👥</span> Customers</a>
+                <a class="sidebar-link" href="/pages/admin/reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <a class="sidebar-link" onclick="logout()" style="cursor:pointer"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <main class="admin-content">
+            <div style="margin-bottom:1.5rem">
+                <h2 style="color:var(--secondary)">👥 Manage Customers</h2>
+                <p style="color:var(--mid-gray);font-size:0.88rem">View and manage all registered customers</p>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Bookings</th>
+                            <th>Total Spent</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        <tr><td colspan="9" style="text-align:center;padding:2rem"><div class="spinner" style="margin:0 auto"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/api.js"></script>
+<script>
+    if (!requireAdmin()) { }
+
+    async function loadUsers() {
+        const { ok, data } = await AdminAPI.getUsers();
+        const tbody = document.getElementById('users-tbody');
+        if (!ok) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger)">Failed to load.</td></tr>'; return; }
+
+        const users = data.users || [];
+        if (!users.length) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--mid-gray)">No customers registered yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map((u, i) => `
+            <tr>
+                <td style="color:var(--mid-gray)">${i+1}</td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:0.6rem">
+                        <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--secondary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex-shrink:0">${u.name.charAt(0).toUpperCase()}</div>
+                        <span style="font-weight:500">${u.name}</span>
+                    </div>
+                </td>
+                <td style="font-size:0.85rem">${u.email}</td>
+                <td style="font-size:0.85rem">${u.phone || '—'}</td>
+                <td style="text-align:center"><span style="font-weight:600;color:var(--secondary)">${u.total_bookings}</span></td>
+                <td style="font-weight:600;color:var(--primary)">${formatCurrency(u.total_spent)}</td>
+                <td>${u.is_active ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Inactive</span>'}</td>
+                <td style="font-size:0.82rem;color:var(--mid-gray)">${formatDate(u.created_at)}</td>
+                <td>
+                    <button class="btn btn-sm ${u.is_active ? 'btn-danger' : 'btn-success'}"
+                        onclick="toggleUser(${u.id}, ${u.is_active}, '${u.name}')">
+                        ${u.is_active ? '🔒 Deactivate' : '✅ Activate'}
+                    </button>
+                </td>
+            </tr>`).join('');
+    }
+
+    async function toggleUser(id, isActive, name) {
+        const action = isActive ? 'deactivate' : 'activate';
+        if (!confirm(`${action.charAt(0).toUpperCase()+action.slice(1)} account for ${name}?`)) return;
+        const { ok, data } = await AdminAPI.toggleUser(id);
+        if (ok && data.success) { showToast(data.message, 'success'); loadUsers(); }
+        else showToast(data.message || 'Action failed.', 'error');
+    }
+
+    loadUsers();
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Grand Royal Hotel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body { background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%); min-height: 100vh; }
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        .auth-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 440px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .auth-logo .brand { font-family: var(--font-display); font-size: 2rem; color: var(--primary); }
+        .auth-logo .tagline { color: var(--mid-gray); font-size: 0.85rem; }
+        .auth-card h2 { text-align: center; margin-bottom: 0.5rem; color: var(--secondary); }
+        .auth-card .subtitle { text-align: center; color: var(--mid-gray); font-size: 0.88rem; margin-bottom: 2rem; }
+        .divider {
+            display: flex; align-items: center; gap: 1rem;
+            margin: 1.5rem 0; color: var(--mid-gray); font-size: 0.82rem;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--light-gray); }
+        .demo-credentials {
+            background: rgba(201,168,76,0.08);
+            border: 1px solid rgba(201,168,76,0.2);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.82rem;
+        }
+        .demo-credentials h5 { color: var(--primary); margin-bottom: 0.5rem; font-size: 0.82rem; }
+        .demo-btn { background: var(--light-gray); border: none; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.78rem; cursor: pointer; margin-top: 0.3rem; }
+        .demo-btn:hover { background: var(--primary); color: var(--secondary); }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo">Grand<span>Royal</span></a>
+    <div class="nav-auth" id="nav-auth"></div>
+</nav>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <div class="brand">🏨 Grand Royal</div>
+            <div class="tagline">Hotel Management System</div>
+        </div>
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Sign in to your account to continue</p>
+
+        <!-- Demo Credentials -->
+        <div class="demo-credentials">
+            <h5>🔐 Demo Credentials</h5>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.3rem">
+                <button class="demo-btn" onclick="fillAdmin()">Fill Admin</button>
+                <button class="demo-btn" onclick="fillCustomer()">Fill Customer</button>
+            </div>
+            <small style="color:var(--mid-gray)">Admin: admin@hotel.com / Admin@123</small>
+        </div>
+
+        <div id="error-msg" class="alert alert-error hidden"></div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" id="login-btn" class="btn btn-primary btn-block btn-lg" style="margin-top:0.5rem">
+                Sign In
+            </button>
+        </form>
+
+        <div class="divider">or</div>
+        <p style="text-align:center;font-size:0.88rem;color:var(--mid-gray)">
+            Don't have an account?
+            <a href="/pages/register.html" style="color:var(--primary);font-weight:500">Register here</a>
+        </p>
+    </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/api.js"></script>
+<script>
+    // If already logged in, redirect appropriately
+    if (isLoggedIn()) {
+        window.location.href = isAdmin() ? '/pages/admin/dashboard.html' : '/pages/customer/bookings.html';
+    }
+
+    function fillAdmin() {
+        document.getElementById('email').value = 'admin@hotel.com';
+        document.getElementById('password').value = 'Admin@123';
+    }
+    function fillCustomer() {
+        document.getElementById('email').value = 'john@example.com';
+        document.getElementById('password').value = 'Test@123';
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('login-btn');
+        const errMsg = document.getElementById('error-msg');
+        errMsg.classList.add('hidden');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        const { ok, data } = await AuthAPI.login({ email, password });
+
+        if (ok && data.success) {
+            setAuth(data.token, data.user);
+            showToast(`Welcome back, ${data.user.name}! 🎉`, 'success');
+            setTimeout(() => {
+                if (data.user.role === 'admin') {
+                    window.location.href = '/pages/admin/dashboard.html';
+                } else {
+                    window.location.href = '/pages/customer/bookings.html';
+                }
+            }, 1000);
+        } else {
+            errMsg.textContent = '❌ ' + (data.message || 'Login failed. Please try again.');
+            errMsg.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Sign In';
+        }
+    }
+</script>
+</body>
+</html>

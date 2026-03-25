@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings — Grand Royal Hotel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .booking-card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 1.2rem;
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+        }
+        .booking-card:hover { box-shadow: var(--shadow-md); }
+        .booking-header {
+            background: var(--secondary);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .booking-ref { color: var(--primary); font-weight: 600; font-family: var(--font-display); }
+        .booking-body { padding: 1.5rem; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.5rem; }
+        @media(max-width:768px){ .booking-body{ grid-template-columns:1fr; } }
+        .booking-detail-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--mid-gray); margin-bottom: 0.3rem; }
+        .booking-detail-value { font-weight: 500; color: var(--dark-gray); }
+        .booking-actions {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--light-gray);
+            margin-bottom: 2rem;
+        }
+        .tab-btn {
+            padding: 0.8rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--mid-gray);
+            transition: var(--transition);
+        }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--mid-gray); }
+        .empty-state .icon { font-size: 4rem; display: block; margin-bottom: 1rem; }
+        /* Invoice styles */
+        .invoice-box {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--light-gray); }
+        .invoice-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+        .invoice-table th { background: var(--secondary); color: var(--white); padding: 0.7rem; text-align: left; }
+        .invoice-table td { padding: 0.7rem; border-bottom: 1px solid var(--light-gray); }
+        .invoice-total-section { background: var(--light-gray); padding: 1rem; border-radius: var(--radius-sm); }
+        .inv-row { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.9rem; }
+        .inv-row.grand { font-weight: 700; font-size: 1.1rem; color: var(--primary); border-top: 1px solid #ddd; padding-top: 0.6rem; margin-top: 0.4rem; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo">Grand<span>Royal</span></a>
+    <div class="nav-links">
+        <a href="/index.html">Home</a>
+        <a href="/pages/rooms.html">Rooms</a>
+        <a href="/pages/customer/bookings.html" class="active">My Bookings</a>
+    </div>
+    <div class="nav-auth" id="nav-auth"></div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div class="container">
+            <h1>📋 My Bookings</h1>
+            <p>Manage all your reservations in one place</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="container">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="filterBookings('all', this)">All</button>
+                <button class="tab-btn" onclick="filterBookings('pending', this)">Pending</button>
+                <button class="tab-btn" onclick="filterBookings('confirmed', this)">Confirmed</button>
+                <button class="tab-btn" onclick="filterBookings('checked_in', this)">Checked In</button>
+                <button class="tab-btn" onclick="filterBookings('cancelled', this)">Cancelled</button>
+            </div>
+
+            <div id="bookings-list">
+                <div class="empty-state"><div class="spinner" style="width:40px;height:40px;border-width:3px;margin:0 auto"></div><p style="margin-top:1rem">Loading your bookings...</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="payment-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>💳 Make Payment</h3>
+            <button class="modal-close" onclick="closePayModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="pay-booking-info" style="background:var(--light-gray);padding:1rem;border-radius:var(--radius-sm);margin-bottom:1rem;font-size:0.88rem"></div>
+            <div class="form-group">
+                <label class="form-label">Payment Method *</label>
+                <select id="pay-method" class="form-control">
+                    <option value="credit_card">💳 Credit Card</option>
+                    <option value="debit_card">🏦 Debit Card</option>
+                    <option value="upi">📱 UPI</option>
+                    <option value="net_banking">🌐 Net Banking</option>
+                    <option value="cash">💵 Cash</option>
+                </select>
+            </div>
+            <div id="payment-error" class="alert alert-error hidden"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closePayModal()">Cancel</button>
+            <button class="btn btn-success" id="pay-btn" onclick="processPayment()">Pay Now</button>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Modal -->
+<div class="modal-overlay" id="invoice-modal">
+    <div class="modal" style="max-width:650px">
+        <div class="modal-header">
+            <h3>🧾 Invoice</h3>
+            <button class="modal-close" onclick="closeInvoiceModal()">✕</button>
+        </div>
+        <div class="modal-body" id="invoice-content"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeInvoiceModal()">Close</button>
+            <button class="btn btn-primary" onclick="printInvoice()">🖨 Print</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modify Booking Modal -->
+<div class="modal-overlay" id="modify-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>✏️ Modify Booking</h3>
+            <button class="modal-close" onclick="document.getElementById('modify-modal').classList.remove('active')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">New Check-In</label>
+                    <input type="date" id="m-checkin" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Check-Out</label>
+                    <input type="date" id="m-checkout" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Special Requests</label>
+                <textarea id="m-requests" class="form-control"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="document.getElementById('modify-modal').classList.remove('active')">Cancel</button>
+            <button class="btn btn-primary" onclick="submitModify()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/api.js"></script>
+<script>
+    let allBookings = [];
+    let currentFilter = 'all';
+    let selectedBookingId = null;
+    let selectedBooking = null;
+
+    if (!requireAuth()) { /* redirects */ }
+
+    async function loadBookings() {
+        const { ok, data } = await BookingAPI.getMyBookings();
+        if (!ok) { showToast('Failed to load bookings.', 'error'); return; }
+        allBookings = data.bookings || [];
+        renderBookings(allBookings);
+    }
+
+    function filterBookings(status, btn) {
+        currentFilter = status;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filtered = status === 'all' ? allBookings : allBookings.filter(b => b.status === status);
+        renderBookings(filtered);
+    }
+
+    function renderBookings(bookings) {
+        const list = document.getElementById('bookings-list');
+        if (!bookings || bookings.length === 0) {
+            list.innerHTML = `<div class="empty-state">
+                <span class="icon">📭</span>
+                <h4>No Bookings Found</h4>
+                <p>${currentFilter === 'all' ? "You haven't made any bookings yet." : `No ${currentFilter} bookings found.`}</p>
+                <a href="/pages/rooms.html" class="btn btn-primary" style="margin-top:1rem">Browse Rooms</a>
+            </div>`;
+            return;
+        }
+
+        list.innerHTML = bookings.map(b => {
+            const isPaid = b.payment_status === 'completed';
+            const canCancel = ['pending','confirmed'].includes(b.status);
+            const canPay    = b.status === 'pending' && !isPaid;
+            const canModify = ['pending','confirmed'].includes(b.status);
+            const hasInvoice = isPaid;
+
+            return `
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div>
+                        <div class="booking-ref">${b.booking_reference}</div>
+                        <div style="color:rgba(255,255,255,0.5);font-size:0.78rem">Booked on ${formatDateTime(b.created_at)}</div>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;align-items:center">
+                        ${getStatusBadge(b.status)}
+                        ${isPaid ? '<span class="badge badge-success">Paid ✓</span>' : '<span class="badge badge-warning">Unpaid</span>'}
+                    </div>
+                </div>
+                <div class="booking-body">
+                    <div>
+                        <div class="booking-detail-label">Room</div>
+                        <div class="booking-detail-value" style="font-size:1.1rem">Room ${b.room_number} — ${b.room_type}</div>
+                        <div style="font-size:0.82rem;color:var(--mid-gray);margin-top:0.2rem">${b.num_guests} Guest(s)</div>
+                    </div>
+                    <div>
+                        <div class="booking-detail-label">Check-In</div>
+                        <div class="booking-detail-value">${formatDate(b.check_in_date)}</div>
+                        <div style="font-size:0.82rem;color:var(--mid-gray)">3:00 PM</div>
+                        <div class="booking-detail-label" style="margin-top:0.8rem">Check-Out</div>
+                        <div class="booking-detail-value">${formatDate(b.check_out_date)}</div>
+                        <div style="font-size:0.82rem;color:var(--mid-gray)">11:00 AM</div>
+                    </div>
+                    <div>
+                        <div class="booking-detail-label">Duration</div>
+                        <div class="booking-detail-value">${b.total_nights} Night(s)</div>
+                        <div class="booking-detail-label" style="margin-top:0.8rem">Total Amount</div>
+                        <div class="booking-detail-value" style="font-size:1.3rem;color:var(--primary)">${formatCurrency(b.total_amount)}</div>
+                        ${b.payment_method ? `<div style="font-size:0.78rem;color:var(--mid-gray)">${b.payment_method.replace('_',' ')}</div>` : ''}
+                    </div>
+                </div>
+                <div class="booking-actions">
+                    ${canPay     ? `<button class="btn btn-success btn-sm" onclick="openPayment(${b.id})">💳 Pay Now</button>` : ''}
+                    ${hasInvoice ? `<button class="btn btn-secondary btn-sm" onclick="viewInvoice(${b.id})">🧾 Invoice</button>` : ''}
+                    ${canModify  ? `<button class="btn btn-outline btn-sm" onclick="openModify(${b.id}, '${b.check_in_date}', '${b.check_out_date}')">✏️ Modify</button>` : ''}
+                    ${canCancel  ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id}, '${b.booking_reference}')">✕ Cancel</button>` : ''}
+                    ${!canCancel && !canPay && !hasInvoice && !canModify ? '<span style="color:var(--mid-gray);font-size:0.85rem">No actions available</span>' : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ----- PAYMENT -----
+    function openPayment(bookingId) {
+        selectedBookingId = bookingId;
+        selectedBooking = allBookings.find(b => b.id === bookingId);
+        document.getElementById('pay-booking-info').innerHTML = `
+            <b>Booking:</b> ${selectedBooking.booking_reference}<br>
+            <b>Room:</b> ${selectedBooking.room_number} (${selectedBooking.room_type})<br>
+            <b>Amount Due:</b> <span style="color:var(--primary);font-weight:600">${formatCurrency(selectedBooking.total_amount)}</span>`;
+        document.getElementById('payment-error').classList.add('hidden');
+        document.getElementById('payment-modal').classList.add('active');
+    }
+    function closePayModal() { document.getElementById('payment-modal').classList.remove('active'); }
+
+    async function processPayment() {
+        const method = document.getElementById('pay-method').value;
+        const btn = document.getElementById('pay-btn');
+        const errEl = document.getElementById('payment-error');
+        errEl.classList.add('hidden');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Processing...';
+
+        const { ok, data } = await PaymentAPI.process({ booking_id: selectedBookingId, payment_method: method });
+
+        if (ok && data.success) {
+            closePayModal();
+            showToast(`✅ Payment successful! Ref: ${data.payment.payment_reference}`, 'success', 5000);
+            loadBookings();
+        } else {
+            errEl.textContent = '❌ ' + (data.message || 'Payment failed.');
+            errEl.classList.remove('hidden');
+        }
+        btn.disabled = false;
+        btn.textContent = 'Pay Now';
+    }
+
+    // ----- INVOICE -----
+    async function viewInvoice(bookingId) {
+        showLoading('Loading invoice...');
+        const { ok, data } = await PaymentAPI.getInvoice(bookingId);
+        hideLoading();
+        if (!ok) { showToast('Invoice not found.', 'error'); return; }
+        const inv = data.invoice;
+
+        document.getElementById('invoice-content').innerHTML = `
+            <div class="invoice-box">
+                <div class="invoice-header">
+                    <div>
+                        <div style="font-family:var(--font-display);font-size:1.5rem;color:var(--primary)">🏨 Grand Royal Hotel</div>
+                        <div style="font-size:0.82rem;color:var(--mid-gray)">123 MG Road, Hyderabad, TS 500001</div>
+                        <div style="font-size:0.82rem;color:var(--mid-gray)">GSTIN: 36XXXXX1234X1ZX</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-weight:700;font-size:1.1rem;color:var(--secondary)">INVOICE</div>
+                        <div style="color:var(--primary);font-weight:600">${inv.invoice_number}</div>
+                        <div style="font-size:0.82rem;color:var(--mid-gray)">${formatDate(inv.issued_at)}</div>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;font-size:0.88rem">
+                    <div>
+                        <div style="font-weight:600;margin-bottom:0.3rem;color:var(--secondary)">Bill To:</div>
+                        <div>${inv.guest_name}</div>
+                        <div style="color:var(--mid-gray)">${inv.guest_email}</div>
+                        <div style="color:var(--mid-gray)">${inv.guest_phone||''}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div><b>Booking Ref:</b> ${inv.booking_reference}</div>
+                        <div><b>Check-In:</b> ${formatDate(inv.check_in_date)}</div>
+                        <div><b>Check-Out:</b> ${formatDate(inv.check_out_date)}</div>
+                        <div><b>Transaction:</b> ${inv.transaction_id||'—'}</div>
+                    </div>
+                </div>
+                <table class="invoice-table">
+                    <thead><tr><th>Description</th><th>Nights</th><th>Rate/Night</th><th>Amount</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>Room ${inv.room_number} — ${inv.room_type}</td>
+                            <td>${inv.total_nights}</td>
+                            <td>${formatCurrency(inv.price_per_night)}</td>
+                            <td>${formatCurrency(inv.subtotal)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="invoice-total-section">
+                    <div class="inv-row"><span>Sub Total</span><span>${formatCurrency(inv.subtotal)}</span></div>
+                    <div class="inv-row"><span>GST (${inv.tax_rate}%)</span><span>${formatCurrency(inv.tax_amount)}</span></div>
+                    <div class="inv-row grand"><span>Total Paid</span><span>${formatCurrency(inv.total_amount)}</span></div>
+                </div>
+                <div style="text-align:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--light-gray);font-size:0.82rem;color:var(--mid-gray)">
+                    ✅ Payment completed via ${inv.payment_method ? inv.payment_method.replace('_',' ') : 'Online'} on ${formatDateTime(inv.paid_at)}<br>
+                    Thank you for choosing Grand Royal Hotel!
+                </div>
+            </div>`;
+        document.getElementById('invoice-modal').classList.add('active');
+    }
+    function closeInvoiceModal() { document.getElementById('invoice-modal').classList.remove('active'); }
+    function printInvoice() { window.print(); }
+
+    // ----- MODIFY -----
+    function openModify(id, ci, co) {
+        selectedBookingId = id;
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('m-checkin').value = ci.split('T')[0];
+        document.getElementById('m-checkout').value = co.split('T')[0];
+        document.getElementById('m-checkin').min = today;
+        document.getElementById('m-checkout').min = today;
+        document.getElementById('modify-modal').classList.add('active');
+    }
+
+    async function submitModify() {
+        const ci  = document.getElementById('m-checkin').value;
+        const co  = document.getElementById('m-checkout').value;
+        const req = document.getElementById('m-requests').value;
+        const { ok, data } = await BookingAPI.modify(selectedBookingId, { check_in_date: ci, check_out_date: co, special_requests: req });
+        if (ok && data.success) {
+            showToast('Booking modified successfully!', 'success');
+            document.getElementById('modify-modal').classList.remove('active');
+            loadBookings();
+        } else {
+            showToast(data.message || 'Failed to modify.', 'error');
+        }
+    }
+
+    // ----- CANCEL -----
+    async function cancelBooking(id, ref) {
+        if (!confirm(`Cancel booking ${ref}? This cannot be undone.`)) return;
+        const { ok, data } = await BookingAPI.cancel(id, { cancellation_reason: 'Cancelled by customer' });
+        if (ok && data.success) {
+            showToast('Booking cancelled.', 'success');
+            loadBookings();
+        } else {
+            showToast(data.message || 'Cancel failed.', 'error');
+        }
+    }
+
+    loadBookings();
+</script>
+</body>
+</html>

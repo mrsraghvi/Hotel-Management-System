@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings — Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .search-box { display:flex;gap:0.5rem;flex:1;min-width:200px; }
+        .search-box input { flex:1; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <a href="/index.html" class="nav-logo">Grand<span>Royal</span></a>
+    <div class="nav-links">
+        <a href="/pages/admin/dashboard.html">Dashboard</a>
+        <a href="/pages/admin/rooms.html">Rooms</a>
+        <a href="/pages/admin/bookings.html" class="active">Bookings</a>
+        <a href="/pages/admin/reports.html">Reports</a>
+    </div>
+    <div class="nav-auth" id="nav-auth"></div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Main</div>
+                <a class="sidebar-link" href="/pages/admin/dashboard.html"><span class="sidebar-icon">📊</span> Dashboard</a>
+                <a class="sidebar-link" href="/pages/admin/rooms.html"><span class="sidebar-icon">🛏</span> Manage Rooms</a>
+                <a class="sidebar-link active" href="/pages/admin/bookings.html"><span class="sidebar-icon">📋</span> Bookings</a>
+                <a class="sidebar-link" href="/pages/admin/users.html"><span class="sidebar-icon">👥</span> Customers</a>
+                <a class="sidebar-link" href="/pages/admin/reports.html"><span class="sidebar-icon">📈</span> Reports</a>
+            </div>
+            <div class="sidebar-section">
+                <a class="sidebar-link" onclick="logout()" style="cursor:pointer"><span class="sidebar-icon">🚪</span> Logout</a>
+            </div>
+        </aside>
+
+        <main class="admin-content">
+            <div style="margin-bottom:1.5rem">
+                <h2 style="color:var(--secondary)">📋 All Bookings</h2>
+                <p style="color:var(--mid-gray);font-size:0.88rem">View and manage all reservations</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="card" style="margin-bottom:1.5rem">
+                <div class="card-body" style="padding:1rem">
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+                        <div class="search-box">
+                            <input type="text" id="f-search" class="form-control" placeholder="Search by name, reference, room...">
+                            <button class="btn btn-primary btn-sm" onclick="loadBookings()">Search</button>
+                        </div>
+                        <div class="form-group" style="margin:0;min-width:140px">
+                            <select id="f-status" class="form-control" onchange="loadBookings()">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="checked_in">Checked In</option>
+                                <option value="checked_out">Checked Out</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="clearFilters()">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Chips -->
+            <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-bottom:1.2rem">
+                <div id="chip-total" style="background:var(--white);padding:0.4rem 1rem;border-radius:20px;font-size:0.82rem;box-shadow:var(--shadow-sm)">Total: <b>—</b></div>
+            </div>
+
+            <!-- Bookings Table -->
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Guest</th>
+                            <th>Room</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Amount</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookings-tbody">
+                        <tr><td colspan="9" style="text-align:center;padding:2rem"><div class="spinner" style="margin:0 auto"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal-overlay" id="status-modal">
+    <div class="modal" style="max-width:400px">
+        <div class="modal-header">
+            <h3>Update Booking Status</h3>
+            <button class="modal-close" onclick="closeStatusModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.88rem;color:var(--mid-gray);margin-bottom:1rem">Booking: <b id="status-ref"></b></p>
+            <div class="form-group">
+                <label class="form-label">New Status</label>
+                <select id="new-status" class="form-control">
+                    <option value="pending">⏳ Pending</option>
+                    <option value="confirmed">✅ Confirmed</option>
+                    <option value="checked_in">🔑 Checked In</option>
+                    <option value="checked_out">🚪 Checked Out</option>
+                    <option value="cancelled">✕ Cancelled</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeStatusModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitStatusUpdate()">Update Status</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/api.js"></script>
+<script>
+    if (!requireAdmin()) { }
+
+    let selectedBookingId = null;
+
+    async function loadBookings() {
+        const search = document.getElementById('f-search').value.trim();
+        const status = document.getElementById('f-status').value;
+        let qp = [];
+        if (search) qp.push(`search=${encodeURIComponent(search)}`);
+        if (status) qp.push(`status=${status}`);
+
+        const tbody = document.getElementById('bookings-tbody');
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+
+        const { ok, data } = await BookingAPI.getAll(qp.join('&'));
+        if (!ok) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger)">Failed to load.</td></tr>'; return; }
+
+        const bookings = data.bookings || [];
+        document.getElementById('chip-total').innerHTML = `Total: <b>${bookings.length}</b>`;
+
+        if (!bookings.length) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--mid-gray)">No bookings found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = bookings.map(b => `
+            <tr>
+                <td><span style="font-weight:600;color:var(--primary);font-size:0.82rem">${b.booking_reference}</span></td>
+                <td>
+                    <div style="font-weight:500">${b.guest_name}</div>
+                    <div style="font-size:0.75rem;color:var(--mid-gray)">${b.guest_email}</div>
+                </td>
+                <td>${b.room_number} <span style="color:var(--mid-gray);font-size:0.78rem">(${b.room_type})</span></td>
+                <td style="font-size:0.85rem">${formatDate(b.check_in_date)}</td>
+                <td style="font-size:0.85rem">${formatDate(b.check_out_date)}<br><span style="color:var(--mid-gray);font-size:0.75rem">${b.total_nights} nights</span></td>
+                <td style="font-weight:600;color:var(--primary)">${formatCurrency(b.total_amount)}</td>
+                <td>${b.payment_status ? getStatusBadge(b.payment_status) : '<span class="badge badge-warning">Unpaid</span>'}</td>
+                <td>${getStatusBadge(b.status)}</td>
+                <td>
+                    <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
+                        <button class="btn btn-outline btn-sm" onclick="openStatusModal(${b.id},'${b.booking_reference}','${b.status}')">✏️</button>
+                        ${!['cancelled','checked_out'].includes(b.status)
+                            ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id},'${b.booking_reference}')">✕</button>`
+                            : ''}
+                    </div>
+                </td>
+            </tr>`).join('');
+    }
+
+    function openStatusModal(id, ref, currentStatus) {
+        selectedBookingId = id;
+        document.getElementById('status-ref').textContent = ref;
+        document.getElementById('new-status').value = currentStatus;
+        document.getElementById('status-modal').classList.add('active');
+    }
+
+    function closeStatusModal() { document.getElementById('status-modal').classList.remove('active'); }
+
+    async function submitStatusUpdate() {
+        const status = document.getElementById('new-status').value;
+        const { ok, data } = await BookingAPI.updateStatus(selectedBookingId, { status });
+        if (ok && data.success) {
+            showToast(`Booking status updated to "${status}".`, 'success');
+            closeStatusModal();
+            loadBookings();
+        } else {
+            showToast(data.message || 'Update failed.', 'error');
+        }
+    }
+
+    async function cancelBooking(id, ref) {
+        if (!confirm(`Cancel booking ${ref}?`)) return;
+        const { ok, data } = await BookingAPI.cancel(id, { cancellation_reason: 'Cancelled by admin' });
+        if (ok && data.success) { showToast('Booking cancelled.', 'success'); loadBookings(); }
+        else showToast(data.message || 'Cancel failed.', 'error');
+    }
+
+    function clearFilters() {
+        document.getElementById('f-search').value = '';
+        document.getElementById('f-status').value = '';
+        loadBookings();
+    }
+
+    // Enter key search
+    document.getElementById('f-search').addEventListener('keypress', e => { if (e.key === 'Enter') loadBookings(); });
+    loadBookings();
+</script>
+</body>
+</html>
