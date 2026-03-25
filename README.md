@@ -296,36 +296,6 @@ invoices
 - Token sent in Authorization header with every protected request
 - Profile update and password change supported
 
-### 2. Room Module
-- Room types are master data (Single/Double/Deluxe/Suite)
-- Each room has a room number, floor, price, and status
-- Availability search queries bookings table with date overlap detection
-- Admin can CRUD rooms; soft-delete prevents loss of booking history
-
-### 3. Booking Module
-- Creates booking with date validation (no past dates, check-out > check-in)
-- Checks for date conflicts with existing bookings (SQL subquery)
-- Calculates nights, subtotal, 18% GST tax, and total
-- Generates unique reference (HMS-YYYY-XXXXX)
-- Status flow: pending → confirmed → checked_in → checked_out
-
-### 4. Payment Module
-- Simulates payment gateway (real apps use Razorpay/Stripe)
-- Generates payment reference and transaction ID
-- Auto-generates invoice on successful payment
-- Invoice includes all booking details, tax breakdown
-
-### 5. Admin Module
-- Dashboard aggregates real-time stats from all tables
-- Revenue tracking by room type and month
-- Occupancy rates calculated per room
-- Booking status can be updated manually
-
-### 6. JWT Authentication
-- Token contains: user ID, email, role, name
-- Middleware verifies token on every protected route
-- Role-based: adminOnly, customerOnly, verifyToken
-- Tokens expire in 7 days
 
 ---
 
@@ -369,5 +339,3 @@ invoices
 
 ---
 
-*Built with ❤️ for Final Year Engineering Project*
-*Tech: Node.js + Express + MySQL + HTML/CSS/JS + JWT*
